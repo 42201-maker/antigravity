@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema moderno de gerenciamento de filmes - Cadastro, edição, filtros e catálogo cinematográfico completo.">
+  <title>CineManager — Gerenciador de Filmes</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header / Barra de Navegação -->
+  <header class="header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">🎬</div>
+        <div class="brand-text">
+          <h1>Cine<span>Manager</span></h1>
+          <p class="brand-tagline">Catálogo e Gerenciador de Filmes</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <!-- Botão/Indicador de Conexão do Servidor Backend -->
+        <button id="btn-config-api" class="btn-api-status" title="Configurar URL do Backend (API)">
+          <span class="status-dot" id="api-status-dot"></span>
+          <span id="api-status-text">Servidor</span>
+        </button>
+
+        <!-- Grupo de botões para visitantes (não autenticados) -->
+        <div id="auth-actions-guest" class="auth-btn-group">
+          <button id="btn-abrir-login" class="btn btn-secondary">
+            <span>🔑 Entrar</span>
+          </button>
+          <button id="btn-abrir-cadastro" class="btn btn-primary">
+            <span>✨ Criar Conta</span>
+          </button>
+        </div>
+
+        <!-- Grupo de botões para usuário logado -->
+        <div id="auth-actions-user" class="auth-btn-group hidden">
+          <div class="user-greeting-badge" title="Você está conectado">
+            <span class="user-avatar-icon">👤</span>
+            <span id="nome-usuario-logado" class="user-name-text">Usuário</span>
+          </div>
+          <button id="btn-novo-filme" class="btn btn-primary">
+            <span class="btn-icon">＋</span>
+            <span>Cadastrar Filme</span>
+          </button>
+          <button id="btn-logout" class="btn btn-outline" title="Sair da sua conta">
+            <span>🚪 Sair</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
+    <!-- Seção de Apresentação para Visitante (Não Autenticado) -->
+    <section id="guest-hero-section" class="guest-hero">
+      <div class="guest-hero-card">
+        <div class="guest-hero-badge">🎬 CineManager Privado</div>
+        <h2 class="guest-hero-title">Seu Acervo de Filmes Seguro e Pessoal</h2>
+        <p class="guest-hero-desc">
+          Cadastre-se ou entre para salvar, editar e organizar seus filmes favoritos com pôsteres, gêneros e classificação indicativa no MongoDB. Cada conta possui um catálogo exclusivo e protegido.
+        </p>
+        <div class="guest-hero-actions">
+          <button id="btn-hero-login" class="btn btn-primary btn-lg">
+            <span>🔑 Entrar na Minha Conta</span>
+          </button>
+          <button id="btn-hero-cadastro" class="btn btn-secondary btn-lg">
+            <span>✨ Criar Conta Gratuita</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção de Controles e Filtros -->
+    <section id="user-controls-section" class="controls-section hidden" aria-label="Filtros e Busca">
+      <div class="controls-card">
+        <!-- Campo de Busca -->
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            id="filtro-busca" 
+            placeholder="Buscar por título do filme..." 
+            autocomplete="off"
+            aria-label="Buscar filmes por título"
+          >
+          <button id="btn-limpar-busca" class="btn-clear-search hidden" title="Limpar busca">&times;</button>
+        </div>
+
+        <!-- Filtros Suspensos -->
+        <div class="filter-group">
+          <div class="select-wrapper">
+            <label for="filtro-genero" class="filter-label">Gênero:</label>
+            <select id="filtro-genero" aria-label="Filtrar por gênero">
+              <option value="">Todos os gêneros</option>
+              <option value="Ação">Ação</option>
+              <option value="Comédia">Comédia</option>
+              <option value="Drama">Drama</option>
+              <option value="Terror">Terror</option>
+              <option value="Ficção Científica">Ficção Científica</option>
+              <option value="Romance">Romance</option>
+              <option value="Animação">Animação</option>
+              <option value="Aventura">Aventura</option>
+              <option value="Suspense">Suspense</option>
+              <option value="Documentário">Documentário</option>
+              <option value="Fantasia">Fantasia</option>
+            </select>
+          </div>
+
+          <div class="select-wrapper">
+            <label for="filtro-classificacao" class="filter-label">Classificação:</label>
+            <select id="filtro-classificacao" aria-label="Filtrar por classificação indicativa">
+              <option value="">Todas</option>
+              <option value="Livre">Livre (Todos os públicos)</option>
+              <option value="10">10 anos</option>
+              <option value="12">12 anos</option>
+              <option value="14">14 anos</option>
+              <option value="16">16 anos</option>
+              <option value="18">18 anos</option>
+            </select>
+          </div>
+
+          <button id="btn-resetar-filtros" class="btn btn-secondary btn-sm" title="Limpar todos os filtros">
+            Limpar Filtros
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Barra de Status e Contagem -->
+    <section id="user-status-bar" class="status-bar hidden">
+      <div class="status-info">
+        <h2 id="total-filmes-texto" class="catalog-heading">Meu Catálogo de Filmes</h2>
+        <span id="contador-filmes" class="badge-count">Carregando...</span>
+      </div>
+    </section>
+
+    <!-- Grid de Filmes -->
+    <section id="filmes-container" class="movies-grid hidden" aria-live="polite">
+      <!-- Cards serão injetados dinamicamente via JS -->
+    </section>
+
+    <!-- Estado de Carregamento (Loading) -->
+    <div id="loading-state" class="state-container hidden">
+      <div class="spinner"></div>
+      <p class="state-text">Carregando seus filmes do acervo...</p>
+    </div>
+
+    <!-- Estado Vazio (Nenhum filme) -->
+    <div id="empty-state" class="state-container hidden">
+      <div class="state-icon">🎞️</div>
+      <h3 class="state-title">Nenhum filme no seu catálogo</h3>
+      <p class="state-text">Você ainda não possui filmes cadastrados. Adicione o seu primeiro filme agora!</p>
+      <button id="btn-empty-cadastrar" class="btn btn-primary">Cadastrar Primeiro Filme</button>
+    </div>
+
+    <!-- Estado de Erro -->
+    <div id="error-state" class="state-container hidden">
+      <div class="state-icon">⚠️</div>
+      <h3 class="state-title">Ops! Não foi possível carregar os filmes</h3>
+      <p id="error-message" class="state-text">Verifique se o backend está em execução e conectado ao banco de dados.</p>
+      <button id="btn-tentar-novamente" class="btn btn-secondary">Tentar Novamente</button>
+    </div>
+  </main>
+
+  <!-- Modal de Autenticação (Login / Cadastro de Conta) -->
+  <div id="modal-auth" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-auth-titulo">
+    <div class="modal-card modal-auth-card">
+      <div class="modal-header">
+        <h3 id="modal-auth-titulo">Acessar CineManager</h3>
+        <button id="btn-fechar-auth" class="modal-close" aria-label="Fechar modal">&times;</button>
+      </div>
+
+      <!-- Abas de Alternância: Entrar vs Criar Conta -->
+      <div class="auth-tabs" role="tablist">
+        <button type="button" id="tab-login" class="tab-btn active" role="tab" aria-selected="true">
+          🔑 Entrar
+        </button>
+        <button type="button" id="tab-cadastro" class="tab-btn" role="tab" aria-selected="false">
+          ✨ Criar Conta
+        </button>
+      </div>
+
+      <!-- Formulário de Login -->
+      <form id="form-login" class="modal-form auth-form" novalidate>
+        <div class="form-group">
+          <label for="login-email">E-mail <span class="required">*</span></label>
+          <input 
+            type="email" 
+            id="login-email" 
+            name="email" 
+            placeholder="seu.email@exemplo.com" 
+            required 
+            autocomplete="email"
+          >
+          <span class="field-error" id="erro-login-email"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="login-senha">Senha <span class="required">*</span></label>
+          <input 
+            type="password" 
+            id="login-senha" 
+            name="senha" 
+            placeholder="Sua senha secreta" 
+            required 
+            autocomplete="current-password"
+          >
+          <span class="field-error" id="erro-login-senha"></span>
+        </div>
+
+        <div class="auth-footer-action">
+          <button type="submit" id="btn-submit-login" class="btn btn-primary btn-block">
+            <span id="btn-login-texto">Entrar na Conta</span>
+          </button>
+        </div>
+
+        <p class="auth-switch-prompt">
+          Não possui uma conta? <button type="button" id="link-ir-para-cadastro" class="btn-link">Cadastre-se gratuitamente</button>
+        </p>
+      </form>
+
+      <!-- Formulário de Cadastro -->
+      <form id="form-cadastro" class="modal-form auth-form hidden" novalidate>
+        <div class="form-group">
+          <label for="cadastro-nome">Nome Completo <span class="required">*</span></label>
+          <input 
+            type="text" 
+            id="cadastro-nome" 
+            name="nome" 
+            placeholder="Ex: Lucas Oliveira" 
+            required 
+            autocomplete="name"
+          >
+          <span class="field-error" id="erro-cadastro-nome"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="cadastro-email">E-mail <span class="required">*</span></label>
+          <input 
+            type="email" 
+            id="cadastro-email" 
+            name="email" 
+            placeholder="seu.email@exemplo.com" 
+            required 
+            autocomplete="email"
+          >
+          <span class="field-error" id="erro-cadastro-email"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="cadastro-senha">Senha <span class="required">*</span></label>
+          <input 
+            type="password" 
+            id="cadastro-senha" 
+            name="senha" 
+            placeholder="Mínimo 6 caracteres" 
+            required 
+            minlength="6" 
+            autocomplete="new-password"
+          >
+          <span class="field-error" id="erro-cadastro-senha"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="cadastro-senha-confirm">Confirmar Senha <span class="required">*</span></label>
+          <input 
+            type="password" 
+            id="cadastro-senha-confirm" 
+            name="senhaConfirm" 
+            placeholder="Repita sua senha" 
+            required 
+            minlength="6" 
+            autocomplete="new-password"
+          >
+          <span class="field-error" id="erro-cadastro-senha-confirm"></span>
+        </div>
+
+        <div class="auth-footer-action">
+          <button type="submit" id="btn-submit-cadastro" class="btn btn-primary btn-block">
+            <span id="btn-cadastro-texto">Criar Minha Conta</span>
+          </button>
+        </div>
+
+        <p class="auth-switch-prompt">
+          Já tem uma conta? <button type="button" id="link-ir-para-login" class="btn-link">Faça login aqui</button>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Cadastro / Edição -->
+  <div id="modal-filme" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-titulo">Cadastrar Novo Filme</h3>
+        <button id="btn-fechar-modal" class="modal-close" aria-label="Fechar modal">&times;</button>
+      </div>
+
+      <form id="form-filme" class="modal-form" novalidate>
+        <input type="hidden" id="filme-id">
+
+        <!-- Título -->
+        <div class="form-group">
+          <label for="campo-titulo">Título do Filme <span class="required">*</span></label>
+          <input 
+            type="text" 
+            id="campo-titulo" 
+            name="titulo" 
+            placeholder="Ex: Interestelar, O Poderoso Chefão..." 
+            required 
+            maxlength="200"
+          >
+          <span class="field-error" id="erro-titulo"></span>
+        </div>
+
+        <!-- Linha: Gênero e Classificação -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="campo-genero">Gênero <span class="required">*</span></label>
+            <select id="campo-genero" name="genero" required>
+              <option value="" disabled selected>Selecione um gênero...</option>
+              <option value="Ação">Ação</option>
+              <option value="Comédia">Comédia</option>
+              <option value="Drama">Drama</option>
+              <option value="Terror">Terror</option>
+              <option value="Ficção Científica">Ficção Científica</option>
+              <option value="Romance">Romance</option>
+              <option value="Animação">Animação</option>
+              <option value="Aventura">Aventura</option>
+              <option value="Suspense">Suspense</option>
+              <option value="Documentário">Documentário</option>
+              <option value="Fantasia">Fantasia</option>
+            </select>
+            <span class="field-error" id="erro-genero"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="campo-classificacao">Classificação Indicativa <span class="required">*</span></label>
+            <select id="campo-classificacao" name="classificacao" required>
+              <option value="" disabled selected>Selecione...</option>
+              <option value="Livre">Livre (Todos os públicos)</option>
+              <option value="10">10 anos</option>
+              <option value="12">12 anos</option>
+              <option value="14">14 anos</option>
+              <option value="16">16 anos</option>
+              <option value="18">18 anos</option>
+            </select>
+            <span class="field-error" id="erro-classificacao"></span>
+          </div>
+        </div>
+
+        <!-- Seletor de Tipo de Imagem (URL ou Upload) -->
+        <div class="form-group">
+          <label>Pôster / Imagem <span class="required">*</span></label>
+          <div class="image-tabs" role="tablist">
+            <button type="button" id="tab-url" class="tab-btn active" role="tab" aria-selected="true">
+              🔗 URL da Imagem
+            </button>
+            <button type="button" id="tab-upload" class="tab-btn" role="tab" aria-selected="false">
+              📁 Enviar Arquivo (Upload)
+            </button>
+          </div>
+
+          <!-- Painel URL -->
+          <div id="painel-url" class="tab-panel active">
+            <input 
+              type="url" 
+              id="campo-foto-url" 
+              placeholder="https://exemplo.com/poster.jpg" 
+              autocomplete="off"
+            >
+            <p class="field-hint">Cole o link direto para a imagem do pôster (jpg, png, webp).</p>
+          </div>
+
+          <!-- Painel Upload -->
+          <div id="painel-upload" class="tab-panel hidden">
+            <div id="dropzone" class="upload-dropzone">
+              <span class="upload-icon">🖼️</span>
+              <p class="upload-prompt">Clique para selecionar ou arraste uma imagem aqui</p>
+              <p class="upload-hint">Formatos suportados: PNG, JPG, JPEG, WEBP (máx. 5MB)</p>
+              <input type="file" id="campo-foto-file" accept="image/*" class="file-input-hidden">
+            </div>
+          </div>
+
+          <span class="field-error" id="erro-foto"></span>
+
+          <!-- Preview da Imagem -->
+          <div id="preview-container" class="preview-box hidden">
+            <span class="preview-label">Pré-visualização:</span>
+            <div class="preview-wrapper">
+              <img id="preview-img" src="" alt="Pré-visualização do pôster">
+              <button type="button" id="btn-remover-foto" class="btn-remove-preview" title="Remover imagem">&times;</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btn-cancelar-modal" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" id="btn-salvar-filme" class="btn btn-primary">
+            <span id="btn-salvar-texto">Salvar Filme</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação de Exclusão -->
+  <div id="modal-excluir" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-excluir-titulo">
+    <div class="modal-card modal-confirm">
+      <div class="modal-header">
+        <h3 id="modal-excluir-titulo">Confirmar Exclusão</h3>
+        <button id="btn-fechar-excluir" class="modal-close" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza de que deseja remover o filme <strong id="nome-filme-excluir"></strong> do catálogo?</p>
+        <p class="confirm-warning">Essa ação não poderá ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-cancelar-excluir" class="btn btn-secondary">Cancelar</button>
+        <button type="button" id="btn-confirmar-excluir" class="btn btn-danger">Excluir Filme</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container de Toasts para Notificações -->
+  <div id="toast-container" class="toast-container" aria-live="assertive"></div>
+
+  <!-- Rodapé -->
+  <footer class="footer">
+    <div class="footer-container">
+      <p>CineManager &copy; 2026 — Mini Sistema de Gerenciamento de Filmes (3C TEC JF)</p>
+      <div class="footer-links">
+        <a href="/api" target="_blank" rel="noopener">Status da API</a>
+        <a href="/api/movies" target="_blank" rel="noopener">Endpoint /api/movies</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal de Configuração do Servidor (Backend) -->
+  <div id="modal-config-api" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-api-titulo">
+    <div class="modal-card modal-auth-card">
+      <div class="modal-header">
+        <h3 id="modal-api-titulo">⚙️ Conexão com o Servidor (Backend)</h3>
+        <button id="btn-fechar-config-api" class="modal-close" aria-label="Fechar modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem 0;">
+        <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.2rem;">
+          Se você subiu o frontend na <strong>Vercel</strong> e o backend no <strong>Render</strong>, <strong>Railway</strong> ou outro link, cole a URL da sua API abaixo:
+        </p>
+        <div class="form-group">
+          <label for="input-api-url">URL Base da API (Backend):</label>
+          <input 
+            type="url" 
+            id="input-api-url" 
+            placeholder="Ex: https://meu-backend.onrender.com ou http://localhost:3000"
+            autocomplete="off"
+            style="width: 100%; padding: 0.72rem 1rem; border-radius: 10px;"
+          >
+          <span class="field-hint" style="margin-top: 0.35rem; display: block;">
+            Deixe em branco para usar o padrão automático (localhost:3000 ou mesma origem na Vercel).
+          </span>
+        </div>
+        <div id="api-test-feedback" style="margin-top: 0.8rem; font-size: 0.88rem; min-height: 1.2rem;"></div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button type="button" id="btn-testar-api" class="btn btn-secondary">Testar Conexão</button>
+        <button type="button" id="btn-salvar-api" class="btn btn-primary">Salvar e Conectar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
