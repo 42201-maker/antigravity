@@ -1,4 +1,4 @@
 window.ENV = {
-  API_URL: 'https://antigravity-front.vercel.app',
+  API_URL: 'https://antigravity-khaki-nine.vercel.app',
 };
 
